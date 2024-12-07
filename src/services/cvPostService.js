@@ -3,6 +3,7 @@ import db from "../models/index";
 import CommonUtils from "../utils/CommonUtils";
 import { raw } from "body-parser";
 const { Op, and, where } = require("sequelize");
+const stringSimilarity = require("string-similarity");
 
 var nodemailer = require("nodemailer");
 let sendmail = (
@@ -128,16 +129,27 @@ let sendmailInviteApplyJob = (user, company, detailPost, link = null) => {
   });
 };
 
-let caculateMatchCv = async (file, mapRequired) => {
+let calculateMatchCv = async (file, mapRequired) => {
   try {
     let match = 0;
     let words = await CommonUtils.pdfToString(file);
+    let wordArray = words.split(/\s+/).map((word) => word.toLowerCase().trim());
+
     for (let key of mapRequired.keys()) {
       let requiredKeyword = mapRequired.get(key).toLowerCase().trim();
-      if (words.includes(requiredKeyword)) {
+
+      // Kiểm tra mức độ tương đồng của từ khóa với các từ trong CV
+      let similarityScores = wordArray.map((word) =>
+        stringSimilarity.compareTwoStrings(word, requiredKeyword)
+      );
+      let maxSimilarity = Math.max(...similarityScores);
+
+      // Nếu mức độ tương đồng lớn hơn 0.8, coi như khớp
+      if (maxSimilarity > 0.8) {
         match++;
       }
     }
+
     let totalRequiredKeywords = mapRequired.size;
     let matchRatio = (match / totalRequiredKeywords) * 100;
 
@@ -402,12 +414,10 @@ let getAllListCvByPost = (data) => {
 
         for (let i = 0; i < listCv.rows.length; i++) {
           let cv = listCv.rows[i];
-          let match = Math.ceil(await caculateMatchCv(cv.file, mapRequired)); // lấy phần nguyên
+          let match = Math.ceil(await calculateMatchCv(cv.file, mapRequired)); // lấy phần nguyên
           let matchSkill = Math.ceil(
             await getMapRequiredSkill(cv.userId, skillRequirement)
-          ); // lấy phần nguyên
-          // console.log("match", match);
-          // console.log("matchSkill", matchSkill);
+          );
           if (match > matchSkill) {
             cv.file = match + "%";
           } else {
