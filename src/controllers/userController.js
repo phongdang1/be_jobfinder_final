@@ -35,7 +35,7 @@ let getUsersById = async (req, res) => {
     console.log(error);
     return res.status(200).json({
       errMessage: "Get user by id failed",
-      errorCode: -1,
+      errCode: -1,
     });
   }
 };
