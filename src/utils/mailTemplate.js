@@ -238,7 +238,7 @@ const getHeadMailTemplate = (userInfo) => {
 
 const getPostTemplate = (postInfo) => {
   return `<!--[if mso | IE]></td></tr></table></td></tr><tr><td class="" width="600px" ><table align="center" border="0" cellpadding="0" cellspacing="0" class="" style="width:550px;" width="550" bgcolor="#ffffff" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
-  <a href=${process.env.URL_REACT + `/detail-job/` + postInfo.id}/>
+  <a href=${process.env.URL_REACT + `/job-detail/` + postInfo.id}/>
   <div style="background:#ffffff;background-color:#ffffff;margin:0px auto;max-width:550px;">
     <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#ffffff;background-color:#ffffff;width:100%;">
       <tbody>

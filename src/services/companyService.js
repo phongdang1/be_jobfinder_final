@@ -5,7 +5,7 @@ import { raw } from "body-parser";
 const cloudinary = require("../utils/cloudinary");
 
 var nodemailer = require("nodemailer");
-let sendmail = (note, reason, userMail, nameCompany, link = null) => {
+let sendmail = (note, reason, userMail, nameCompany = null) => {
   var transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -35,11 +35,6 @@ let sendmail = (note, reason, userMail, nameCompany, link = null) => {
             <p>Hello, ${nameCompany}</p>
             <p>${note}</p>
             <p>Reason: ${reason}</p>
-            ${
-              link
-                ? `<a href="${process.env.URL_REACT}/${link}" style="display: inline-block; margin-top: 20px; padding: 14px 30px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; transition: background-color 0.3s ease, box-shadow 0.3s ease; box-sizing: border-box; width: auto; max-width: 100%;">View Details</a>`
-                : ""
-            }
           </div>
           <div style="padding: 20px; text-align: center; font-size: 14px; color: #666; border-top: 1px solid #d0d0d0;">
             <p>Thank you for using Job Finder!</p>
@@ -614,8 +609,7 @@ let handleBanCompany = (data) => {
             "Company has been banned. Please contact admin for more information",
             data.reason,
             user.email,
-            foundCompany.name,
-            `company/${foundCompany.id}`
+            foundCompany.name
           );
           resolve({
             errCode: 0,
@@ -659,8 +653,7 @@ let handleUnBanCompany = (data) => {
           });
           sendmail(
             "Công ty của bạn đã được mở khóa. Bạn có thể sử dụng dịch vụ bình thường",
-            user.email,
-            `company/${foundCompany.id}`
+            user.email
           );
 
           resolve({
@@ -776,7 +769,7 @@ let handleApproveCompany = (data) => {
           });
           let note =
             "Công ty của bạn đã được duyệt. Hãy đăng nhập và sử dụng dịch vụ của chúng tôi";
-          sendmail(note, user.email, `company/${foundCompany.id}`);
+          sendmail(note, user.email);
           let notification = await db.Notification.create({
             userId: user.id,
             content: "Your company has been approved!",
@@ -832,7 +825,7 @@ let handleRejectCompany = (data) => {
           });
           let note =
             "Công ty của bạn đã bị từ chối. Vui lòng liên hệ với quản trị viên để biết thêm chi tiết";
-          sendmail(note, user.email, `company/${foundCompany.id}`);
+          sendmail(note, user.email);
           let notification = await db.Notification.create({
             userId: user.id,
             content: "Your company has been rejected!",

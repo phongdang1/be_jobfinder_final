@@ -12,7 +12,6 @@ import session from "express-session";
 import http from "http";
 import { sendJobMail, checkReportPost } from "./utils/schedule";
 import { Server as SocketServer } from "socket.io";
-import OpenAI from "openai";
 import { join } from "node:path";
 require("dotenv").config();
 
@@ -83,8 +82,8 @@ app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 viewEngine(app);
-//sendJobMail();
-//checkReportPost();
+sendJobMail();
+checkReportPost();
 connectDB();
 initWebRoutes(app);
 
