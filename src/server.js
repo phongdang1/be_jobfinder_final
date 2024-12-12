@@ -12,12 +12,12 @@ import session from "express-session";
 import http from "http";
 import { sendJobMail, checkReportPost } from "./utils/schedule";
 import { Server as SocketServer } from "socket.io";
-
-const { join } = require("node:path");
+import { join } from "node:path";
 require("dotenv").config();
 
 let app = express();
 const server = http.createServer(app);
+
 const io = new SocketServer(server, {
   cors: {
     origin: process.env.URL_REACT,
@@ -35,6 +35,7 @@ global.ioGlobal.on("connection", (socket) => {
   }
   socket.on("disconnect", () => {});
 });
+
 app.use(
   cors({
     origin: process.env.URL_REACT,
@@ -44,11 +45,11 @@ app.use(
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "default_secret",
-    resave: false, // Không lưu lại session nếu không có thay đổi
-    saveUninitialized: false, // Không lưu session trống
+    resave: false,
+    saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === "development",
-      maxAge: 1000 * 60 * 60 * 24, // Thời gian sống của cookie (1 ngày)
+      maxAge: 1000 * 60 * 60 * 24,
     },
   })
 );
@@ -77,14 +78,12 @@ app.get(
   }
 );
 
-// Cấu hình session
-
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 viewEngine(app);
-//sendJobMail();
-//checkReportPost();
+sendJobMail();
+checkReportPost();
 connectDB();
 initWebRoutes(app);
 

@@ -3,6 +3,7 @@ import db from "../models/index";
 import CommonUtils from "../utils/CommonUtils";
 import { raw } from "body-parser";
 const { Op, and, where } = require("sequelize");
+const stringSimilarity = require("string-similarity");
 
 var nodemailer = require("nodemailer");
 let sendmail = (
@@ -11,8 +12,7 @@ let sendmail = (
   interviewNote,
   user,
   company,
-  detailPost,
-  link = null
+  detailPost
 ) => {
   var transporter = nodemailer.createTransport({
     service: "gmail",
@@ -41,18 +41,11 @@ let sendmail = (
           </div>
           <div style="padding: 20px; line-height: 1.6;">
             <p>Hello, ${user.lastName}</p>
-            <p>You have received an interview invitation from ${
-              company.name
-            }.</p>
+            <p>You have received an interview invitation from ${company.name}.</p>
             <p><strong>Position:</strong> ${detailPost.name}</p>
             <p><strong>Interview Date:</strong> ${interviewDate}</p>
             <p><strong>Interview Location:</strong> ${interviewLocation}</p>
             <p><strong>Note:</strong> ${interviewNote}</p>
-            ${
-              link
-                ? `<a href="${process.env.URL_REACT}/${link}" style="display: inline-block; margin-top: 20px; padding: 14px 30px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; transition: background-color 0.3s ease, box-shadow 0.3s ease; box-sizing: border-box; width: auto; max-width: 100%;">View Details</a>`
-                : ""
-            }
           </div>
           <div style="padding: 20px; text-align: center; font-size: 14px; color: #666; border-top: 1px solid #d0d0d0;">
             <p>Thank you for using Job Finder!</p>
@@ -105,7 +98,7 @@ let sendmailInviteApplyJob = (user, company, detailPost, link = null) => {
             ${
               link
                 ? `<p>You can view more details and submit your application by clicking the button below:</p>
-                   <a href="${process.env.URL_REACT}/${link}" style="display: inline-block; margin-top: 20px; padding: 14px 30px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; transition: background-color 0.3s ease, box-shadow 0.3s ease; box-sizing: border-box; width: auto; max-width: 100%;">Apply Now</a>`
+                   <a href="${process.env.URL_REACT}/job-detail/${link}" style="display: inline-block; margin-top: 20px; padding: 14px 30px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; transition: background-color 0.3s ease, box-shadow 0.3s ease; box-sizing: border-box; width: auto; max-width: 100%;">Apply Now</a>`
                 : `<p>Please visit our website for more details on how to apply.</p>`
             }
           </div>
@@ -128,16 +121,29 @@ let sendmailInviteApplyJob = (user, company, detailPost, link = null) => {
   });
 };
 
-let caculateMatchCv = async (file, mapRequired) => {
+let calculateMatchCv = async (file, mapRequired) => {
   try {
     let match = 0;
     let words = await CommonUtils.pdfToString(file);
+
     for (let key of mapRequired.keys()) {
       let requiredKeyword = mapRequired.get(key).toLowerCase().trim();
-      if (words.includes(requiredKeyword)) {
-        match++;
+
+      for (let word of words) {
+        let wordLower = word.toLowerCase().trim();
+        // Tính độ tương đồng giữa từ trong file cv và từ yêu cầu bằng thuật toán string-similarity
+        let similarityScore = stringSimilarity.compareTwoStrings(
+          requiredKeyword,
+          wordLower
+        );
+
+        // Nếu mức độ tương đồng lớn hơn 0.8, coi như khớp
+        if (similarityScore > 0.8) {
+          match++;
+        }
       }
     }
+
     let totalRequiredKeywords = mapRequired.size;
     let matchRatio = (match / totalRequiredKeywords) * 100;
 
@@ -147,6 +153,7 @@ let caculateMatchCv = async (file, mapRequired) => {
     return 0;
   }
 };
+
 let caculateMatchUserWithFilter = async (userData, listSkillRequired) => {
   let match = 0;
   let myListSkillRequired = new Map();
@@ -390,11 +397,9 @@ let getAllListCvByPost = (data) => {
             },
           ],
         });
-        //console.log("postInfo ", postInfo.postDetailData.skillRequirement);
         let skillRequirement = CommonUtils.flatAllString(
           postInfo.postDetailData.skillRequirement
         );
-        //console.log("mapRequired ", skillRequirement);
         let mapRequired = new Map();
         skillRequirement.forEach((item) => {
           mapRequired.set(item, item);
@@ -402,12 +407,11 @@ let getAllListCvByPost = (data) => {
 
         for (let i = 0; i < listCv.rows.length; i++) {
           let cv = listCv.rows[i];
-          let match = Math.ceil(await caculateMatchCv(cv.file, mapRequired)); // lấy phần nguyên
+
+          let match = Math.ceil(await calculateMatchCv(cv.file, mapRequired)); // lấy phần nguyên
           let matchSkill = Math.ceil(
             await getMapRequiredSkill(cv.userId, skillRequirement)
-          ); // lấy phần nguyên
-          // console.log("match", match);
-          // console.log("matchSkill", matchSkill);
+          );
           if (match > matchSkill) {
             cv.file = match + "%";
           } else {
@@ -1032,8 +1036,7 @@ let createInterviewSchedule = (data) => {
             data.interviewNote,
             user,
             company,
-            detailPost,
-            "user/cvpost"
+            detailPost
           );
           let notification = await db.Notification.create({
             userId: user.id,
@@ -1243,17 +1246,11 @@ let handleInviteApplyJob = (data) => {
           where: { id: data.postId },
           attributes: ["id", "userId", "detailPostId"],
         });
-        console.log("post", post);
         let detailPost = await db.DetailPost.findOne({
           where: { id: post.detailPostId },
           attributes: ["id", "name"],
         });
-        sendmailInviteApplyJob(
-          user,
-          company,
-          detailPost,
-          "user/inviteapplyjob"
-        );
+        sendmailInviteApplyJob(user, company, detailPost, post.id);
         let notification = await db.Notification.create({
           userId: data.userId,
           content: `You have received an invitation to apply for the position ${detailPost.name} from ${company.name}. Please check your email for more details`,

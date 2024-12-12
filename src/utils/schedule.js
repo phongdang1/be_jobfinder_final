@@ -5,11 +5,12 @@ import getStringMailTemplate from "./mailTemplate";
 const { Op } = require("sequelize");
 const nodemailer = require("nodemailer");
 let rule = new schedule.RecurrenceRule();
-// rule.dayOfWeek = [0, 1, 2, 3, 4, 5, 6];
-// rule.hour = 8;
-// rule.minute = 0;
-// rule.second = 0;
-// rule.tz = "Asia/Vientiane";
+let rule2 = new schedule.RecurrenceRule();
+rule2.dayOfWeek = [0, 1, 2, 3, 4, 5, 6];
+rule2.hour = 8;
+rule2.minute = 0;
+rule2.second = 0;
+rule2.tz = "Asia/Vientiane";
 rule.second = 0; // Thực hiện vào giây đầu tiên của mỗi phút
 rule.minute = new schedule.Range(0, 59, 1); // Cứ 1 phút một lần
 
@@ -25,7 +26,7 @@ let sendmail = async (mailTemplate, userMail) => {
   var mailOptions = {
     from: process.env.EMAIL_APP,
     to: userMail,
-    subject: "Gợi ý việc làm cho bạn",
+    subject: "Job suggestion email",
     html: mailTemplate,
   };
 
@@ -215,7 +216,7 @@ let getTemplateMail = async (infoUser) => {
 };
 
 const sendJobMail = () => {
-  schedule.scheduleJob(rule, async function () {
+  schedule.scheduleJob(rule2, async function () {
     try {
       let listUserGetMail = await db.UserDetail.findAll({
         where: {
@@ -277,16 +278,16 @@ const checkReportPost = () => {
           });
 
           post.statusCode = "BANNED";
-          console.log("Đã ẩn bài đăng", post.id);
+
           await post.save();
 
           let detailPost = await db.DetailPost.findOne({
             where: { id: post.detailPostId },
             raw: false,
           });
-          console.log("detailPost");
+
           let notification = await db.Notification.create({
-            content: `Bài đăng ${detailPost.name} của bạn đã bị ẩn do vi phạm nội quy`,
+            content: `Your post ${detailPost.name} has been hidden due to multiple reports. Please wait for the administrator to check`,
             userId: post.userId,
           });
           if (notification) {

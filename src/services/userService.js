@@ -407,6 +407,18 @@ let handleLogin = (data) => {
         if (user) {
           let check = await bcrypt.compareSync(data.password, user.password);
           if (check) {
+            let company = await db.Company.findOne({
+              where: { id: user.companyId },
+              raw: true,
+            });
+            if (company) {
+              if (company.statusCode === "BANNED") {
+                userData.errMessage = "Company is banned";
+                userData.errCode = 5;
+                return resolve(userData);
+              }
+            }
+
             if (user.statusCode === "ACTIVE") {
               userData.errMessage = "Login succeed";
               userData.errCode = 0;

@@ -4,7 +4,7 @@ import { raw } from "body-parser";
 const { Op, where } = require("sequelize");
 require("dotenv").config();
 var nodemailer = require("nodemailer");
-let sendmail = (note, userMail, link = null) => {
+let sendmail = (note, userMail) => {
   var transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -33,11 +33,6 @@ let sendmail = (note, userMail, link = null) => {
           <div style="padding: 20px; line-height: 1.6;">
             <p>Hello,</p>
             <p>${note}</p>
-            ${
-              link
-                ? `<a href="${process.env.URL_REACT}/${link}" style="display: inline-block; margin-top: 20px; padding: 14px 30px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; transition: background-color 0.3s ease, box-shadow 0.3s ease; box-sizing: border-box; width: auto; max-width: 100%;">View Details</a>`
-                : ""
-            }
           </div>
           <div style="padding: 20px; text-align: center; font-size: 14px; color: #666; border-top: 1px solid #d0d0d0;">
             <p>Thank you for using Job Finder!</p>
@@ -613,8 +608,7 @@ let handleBanPost = (data) => {
 
           sendmail(
             `Your post has been banned with the reason ${data.note}`,
-            user.email,
-            `admin/list-post/${foundPost.id}`
+            user.email
           );
           resolve({
             errCode: 0,
@@ -656,8 +650,7 @@ let handleUnBanPost = (data) => {
           });
           sendmail(
             `Your post has been unbanned with the reason ${data.note}`,
-            user.email,
-            `admin/list-post/${foundPost.id}`
+            user.email
           );
           resolve({
             errCode: 0,
@@ -701,8 +694,7 @@ let handleApprovePost = (data) => {
           });
           sendmail(
             `Your post has been approved and is now displayed on the system`,
-            user.email,
-            `admin/list-post/${foundPost.id}`
+            user.email
           );
           let notification = await db.Notification.create({
             userId: user.id,
@@ -759,8 +751,7 @@ let handleRejectPost = (data) => {
           });
           sendmail(
             `Your post has been rejected with the reason: ${data.note}`,
-            user.email,
-            `admin/list-post/${foundPost.id}`
+            user.email
           );
           let notification = await db.Notification.create({
             userId: user.id,

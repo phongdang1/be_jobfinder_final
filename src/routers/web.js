@@ -288,6 +288,7 @@ let initWebRoutes = (app) => {
   //===================API OTP========================//
   router.post("/sendOtp", authController.handleSendOtp);
   router.post("/verifyOtp", authController.handleVerifyOtp);
+  router.post("/chatWithAI", authController.handleChatWithAI);
 
   return app.use("/", router);
 };

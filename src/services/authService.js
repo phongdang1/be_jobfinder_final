@@ -2,6 +2,7 @@ import e from "express";
 import db from "../models/index";
 import { raw } from "body-parser";
 const { generateOtp, isOtpExpired } = require("../utils/otpConfig");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 var nodemailer = require("nodemailer");
 let sendmail = (note, userMail = null) => {
@@ -119,8 +120,42 @@ let handleVerifyOtp = (email, otp) => {
     }
   });
 };
+let handleChatWithAI = (data) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      console.log("replyHistory", data.replyHistory);
+      const genAI = new GoogleGenerativeAI(
+        "AIzaSyAwa38EpavqvyF3mUAfxNp54SprgLSERqs"
+      );
+      const model = await genAI.getGenerativeModel({
+        model: "gemini-1.5-flash",
+      });
+      const prompt = `
+        Tôi là một chuyên gia trong lĩnh vực việc làm. Chỉ trả lời câu hỏi liên quan đến công việc.
+        Cuộc hội thoại trước đó:
+        ${data.replyHistory}
+        Câu hỏi hiện tại:
+        User: ${data.message}`;
+
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
+      let userSocketId = data.userId.toString();
+      global.ioGlobal.to(userSocketId).emit("sendMessage", {
+        message: responseText,
+      });
+      resolve({
+        errCode: 0,
+        errMessage: "OK",
+        data: responseText,
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
 
 module.exports = {
   handleSendOtp: handleSendOtp,
   handleVerifyOtp: handleVerifyOtp,
+  handleChatWithAI: handleChatWithAI,
 };
