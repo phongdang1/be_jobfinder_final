@@ -128,7 +128,7 @@ let handleChatWithAI = (data) => {
         "AIzaSyAwa38EpavqvyF3mUAfxNp54SprgLSERqs"
       );
       const model = await genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.0-flash-exp",
       });
       const prompt = `
         Tôi là một chuyên gia trong lĩnh vực việc làm. Chỉ trả lời câu hỏi liên quan đến công việc.

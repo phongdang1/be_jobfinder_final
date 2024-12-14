@@ -16,11 +16,7 @@ const router = express.Router();
 
 let initWebRoutes = (app) => {
   //===================API USER========================//
-  router.get(
-    "/getAllUsers",
-    middlewareControllers.verifyTokenUser,
-    userController.getAllUsers
-  );
+  router.get("/getAllUsers", userController.getAllUsers);
   router.get(
     "/getAllUsersWithLimit",
     middlewareControllers.verifyTokenUser,
