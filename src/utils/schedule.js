@@ -258,7 +258,7 @@ const sendJobMail = () => {
   });
 };
 const checkReportPost = () => {
-  schedule.scheduleJob(rule, async function () {
+  schedule.scheduleJob(rule2, async function () {
     try {
       let reports = await db.Report.findAll({
         attributes: [
