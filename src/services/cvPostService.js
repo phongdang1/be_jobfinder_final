@@ -195,6 +195,7 @@ let getMapRequiredSkill = async (userId, skillRequirement) => {
       raw: true,
       nest: true,
     });
+    console.log("listSkillRequired", listSkillRequired);
 
     let mapListSkill = new Map();
     listSkillRequired.forEach((item) => {
@@ -204,9 +205,14 @@ let getMapRequiredSkill = async (userId, skillRequirement) => {
       );
     });
     skillRequirement.forEach((item) => {
-      if (mapListSkill.has(item.toLowerCase())) {
-        match++;
-      }
+      mapListSkill.forEach((value, key) => {
+        // console.log("key", key);
+        // console.log("item", item);
+        let similarityScore = stringSimilarity.compareTwoStrings(item, key);
+        if (similarityScore > 0.8) {
+          match++;
+        }
+      });
     });
     let totalRequiredSkills = skillRequirement.length;
     let matchRatio = (match / totalRequiredSkills) * 100;
@@ -407,6 +413,7 @@ let getAllListCvByPost = (data) => {
 
         for (let i = 0; i < listCv.rows.length; i++) {
           let cv = listCv.rows[i];
+          console.log("cv", cv);
 
           let match = Math.ceil(await calculateMatchCv(cv.file, mapRequired)); // lấy phần nguyên
           let matchSkill = Math.ceil(

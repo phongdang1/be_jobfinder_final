@@ -123,26 +123,24 @@ let handleVerifyOtp = (email, otp) => {
 let handleChatWithAI = (data) => {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log("replyHistory", data.replyHistory);
       const genAI = new GoogleGenerativeAI(
         "AIzaSyAwa38EpavqvyF3mUAfxNp54SprgLSERqs"
       );
       const model = await genAI.getGenerativeModel({
         model: "gemini-2.0-flash-exp",
       });
-      const prompt = `
-        Tôi là một chuyên gia trong lĩnh vực việc làm. Chỉ trả lời câu hỏi liên quan đến công việc.
-        Cuộc hội thoại trước đó:
-        ${data.replyHistory}
-        Câu hỏi hiện tại:
-        User: ${data.message}`;
+      let prompt = " ";
+      if (!data.replyHistory) {
+        prompt = `Bạn là một chuyên gia về việc làm. Chỉ trả lời những câu hỏi về việc làm.
+          Câu hỏi : ${data.message}`;
+      } else {
+        prompt = `Đưa ra câu trả lời luôn.Không được hỏi lại
+          Câu trả lời trước : ${data.replyHistory}
+          Câu hỏi tiếp theo : ${data.message}`;
+      }
 
       const result = await model.generateContent(prompt);
       const responseText = result.response.text();
-      let userSocketId = data.userId.toString();
-      global.ioGlobal.to(userSocketId).emit("sendMessage", {
-        message: responseText,
-      });
       resolve({
         errCode: 0,
         errMessage: "OK",

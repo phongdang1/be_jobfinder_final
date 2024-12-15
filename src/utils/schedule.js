@@ -267,7 +267,7 @@ const checkReportPost = () => {
         ],
         where: { isChecked: 0 },
         group: ["postId"],
-        having: db.Sequelize.literal("reportCount >= 1"),
+        having: db.Sequelize.literal("reportCount >= 10"),
         raw: true,
       });
       if (reports && reports.length > 0) {
