@@ -286,6 +286,18 @@ let getAllPost = (data) => {
             db.Sequelize.where(db.Sequelize.col("postDetailData.addressCode"), {
               [Op.like]: `%${data.searchKey}%`,
             }),
+            db.Sequelize.where(
+              db.Sequelize.col("postDetailData.workTypeCode"),
+              {
+                [Op.like]: `%${data.searchKey}%`,
+              }
+            ),
+            db.Sequelize.where(
+              db.Sequelize.col("postDetailData.jobLevelCode"),
+              {
+                [Op.like]: `%${data.searchKey}%`,
+              }
+            ),
           ],
         };
       }
@@ -329,6 +341,15 @@ let handleCreateNewPost = (data) => {
           errMessage: "Missing required fields",
         });
       } else {
+        let checkNamePost = await db.DetailPost.findOne({
+          where: { name: data.name },
+        });
+        if (checkNamePost) {
+          return resolve({
+            errCode: 2,
+            errMessage: "Post name is exist",
+          });
+        }
         let user = await db.User.findOne({
           where: { id: data.userId },
           attributes: {
