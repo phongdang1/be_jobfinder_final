@@ -125,6 +125,7 @@ let calculateMatchCv = async (file, mapRequired) => {
   try {
     let match = 0;
     let words = await CommonUtils.pdfToString(file);
+    console.log("words", words);
     for (let key of mapRequired.keys()) {
       for (let word of words) {
         let requiredKeyword = key;
@@ -135,6 +136,8 @@ let calculateMatchCv = async (file, mapRequired) => {
         );
 
         if (similarityScore > 0.75) {
+          console.log("Matched keyword:", requiredKeyword);
+
           match++;
         }
       }

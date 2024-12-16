@@ -102,7 +102,7 @@ let initWebRoutes = (app) => {
   );
   router.post(
     "/unBanPost",
-    middlewareControllers.verifyTokenAdmin,
+    // middlewareControllers.verifyTokenAdmin,
     postController.handleUnBanPost
   );
   router.post(
@@ -119,11 +119,7 @@ let initWebRoutes = (app) => {
   router.post("/closePost", postController.handleClosePost);
 
   //==================API CV_POST==========================//
-  router.post(
-    "/applyJob",
-    middlewareControllers.verifyTokenUser,
-    cvPostController.handleApplyJob
-  );
+  router.post("/applyJob", cvPostController.handleApplyJob);
   router.get("/getAllListCvByPost", cvPostController.getAllListCvByPost);
   router.get("/getDetailCvPostById", cvPostController.getDetailCvPostById);
   router.get("/getAllCvPostByUserId", cvPostController.getAllCvPostByUserId);
