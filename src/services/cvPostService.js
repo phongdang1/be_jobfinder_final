@@ -125,20 +125,16 @@ let calculateMatchCv = async (file, mapRequired) => {
   try {
     let match = 0;
     let words = await CommonUtils.pdfToString(file);
-
     for (let key of mapRequired.keys()) {
-      let requiredKeyword = mapRequired.get(key).toLowerCase().trim();
-
       for (let word of words) {
-        let wordLower = word.toLowerCase().trim();
-        // Tính độ tương đồng giữa từ trong file cv và từ yêu cầu bằng thuật toán string-similarity
+        let requiredKeyword = key;
+
         let similarityScore = stringSimilarity.compareTwoStrings(
           requiredKeyword,
-          wordLower
+          word
         );
 
-        // Nếu mức độ tương đồng lớn hơn 0.8, coi như khớp
-        if (similarityScore > 0.8) {
+        if (similarityScore > 0.75) {
           match++;
         }
       }
@@ -195,7 +191,6 @@ let getMapRequiredSkill = async (userId, skillRequirement) => {
       raw: true,
       nest: true,
     });
-    console.log("listSkillRequired", listSkillRequired);
 
     let mapListSkill = new Map();
     listSkillRequired.forEach((item) => {
@@ -206,10 +201,8 @@ let getMapRequiredSkill = async (userId, skillRequirement) => {
     });
     skillRequirement.forEach((item) => {
       mapListSkill.forEach((value, key) => {
-        // console.log("key", key);
-        // console.log("item", item);
         let similarityScore = stringSimilarity.compareTwoStrings(item, key);
-        if (similarityScore > 0.8) {
+        if (similarityScore > 0.75) {
           match++;
         }
       });
@@ -419,6 +412,7 @@ let getAllListCvByPost = (data) => {
           let matchSkill = Math.ceil(
             await getMapRequiredSkill(cv.userId, skillRequirement)
           );
+          console.log("match", matchSkill);
           if (match > matchSkill) {
             cv.file = match + "%";
           } else {
