@@ -258,7 +258,7 @@ const sendJobMail = () => {
   });
 };
 const checkReportPost = () => {
-  schedule.scheduleJob(rule2, async function () {
+  schedule.scheduleJob(rule, async function () {
     try {
       let reports = await db.Report.findAll({
         attributes: [
@@ -270,6 +270,7 @@ const checkReportPost = () => {
         having: db.Sequelize.literal("reportCount >= 10"),
         raw: true,
       });
+      console.log("reports", reports);
       if (reports && reports.length > 0) {
         for (let report of reports) {
           let post = await db.Post.findOne({

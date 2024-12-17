@@ -134,7 +134,7 @@ let handleChatWithAI = (data) => {
         prompt = `Bạn là một chuyên gia về việc làm. Chỉ trả lời những câu hỏi về việc làm.
           Câu hỏi : ${data.message}`;
       } else {
-        prompt = `Đưa ra câu trả lời luôn.Không được hỏi lại. Và chỉ trả lời câu hỏi về việc làm.
+        prompt = `Đưa ra câu trả lời luôn.Không được hỏi lại. Nếu câu hỏi không liên quan tới việc làm thì trả lời chỉ trả lời về vấn đề công việc.
           Câu trả lời trước : ${data.replyHistory}
           Câu hỏi tiếp theo : ${data.message}`;
       }
