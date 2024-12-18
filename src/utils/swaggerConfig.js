@@ -10,7 +10,7 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:5000", // Specify your server URL
+        url: "https://be-jobfinder-final.onrender.com", // Specify your server URL
       },
     ],
   },
