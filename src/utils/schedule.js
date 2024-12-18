@@ -267,10 +267,10 @@ const checkReportPost = () => {
         ],
         where: { isChecked: 0 },
         group: ["postId"],
-        having: db.Sequelize.literal("reportCount >= 10"),
+        having: db.Sequelize.literal("reportCount >= 11"),
         raw: true,
       });
-      console.log("reports", reports);
+
       if (reports && reports.length > 0) {
         for (let report of reports) {
           let post = await db.Post.findOne({
