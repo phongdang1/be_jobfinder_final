@@ -271,7 +271,7 @@ const checkReportPost = () => {
         raw: true,
       });
 
-      if (reports && reports.length > 0) {
+      if ( reports.length > 0) {
         for (let report of reports) {
           let post = await db.Post.findOne({
             where: { id: report.postId },
