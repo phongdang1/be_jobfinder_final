@@ -260,54 +260,77 @@ const sendJobMail = () => {
 const checkReportPost = () => {
   schedule.scheduleJob(rule, async function () {
     try {
-      let reports = await db.Report.findAll({
+      // Fetch posts with 10 or more unchecked reports
+      const reports = await db.Report.findAll({
         attributes: [
           "postId",
           [db.Sequelize.fn("COUNT", "postId"), "reportCount"],
         ],
         where: { isChecked: 0 },
         group: ["postId"],
-        having: db.Sequelize.literal("reportCount >= 11"),
+        having: db.Sequelize.literal("reportCount >= 10"),
         raw: true,
       });
 
-      if ( reports.length > 0) {
-        for (let report of reports) {
-          let post = await db.Post.findOne({
-            where: { id: report.postId },
-            raw: false,
-          });
+      if (reports.length > 0 || !reports) {
+        // Process all reported posts concurrently
+        await Promise.all(
+          reports.map(async (report) => {
+            try {
+              // Find the post and update its status
+              const post = await db.Post.findOne({
+                where: { id: report.postId },
+                raw: false,
+              });
 
-          post.statusCode = "BANNED";
+              if (!post) return;
 
-          await post.save();
+              post.statusCode = "BANNED";
+              await post.save();
 
-          let detailPost = await db.DetailPost.findOne({
-            where: { id: post.detailPostId },
-            raw: false,
-          });
+              console.log(`Post ID ${report.postId} has been banned.`);
 
-          let notification = await db.Notification.create({
-            content: `Your post ${detailPost.name} has been hidden due to multiple reports. Please wait for the administrator to check`,
-            userId: post.userId,
-          });
-          if (notification) {
-            let userSocketId = post.userId.toString();
-            console.log("userSocket", userSocketId);
-            global.ioGlobal.to(userSocketId).emit("autoBanPost", {
-              message: notification.content,
-            });
-          }
-          await db.Report.update(
-            { isChecked: 1 },
-            { where: { postId: report.postId, isChecked: 0 } }
-          );
-        }
+              // Fetch detailed post information
+              const detailPost = await db.DetailPost.findOne({
+                where: { id: post.detailPostId },
+                raw: false,
+              });
+
+              // Create a notification for the user
+              const notification = await db.Notification.create({
+                content: `Your post "${detailPost?.name}" has been hidden due to multiple reports. Please wait for the administrator to review.`,
+                userId: post.userId,
+              });
+
+              if (notification) {
+                const userSocketId = post.userId.toString();
+                if (global.ioGlobal.sockets.adapter.rooms.has(userSocketId)) {
+                  global.ioGlobal.to(userSocketId).emit("autoBanPost", {
+                    message: notification.content,
+                  });
+                }
+              }
+
+              // Mark reports as checked
+              await db.Report.update(
+                { isChecked: 1 },
+                { where: { postId: report.postId, isChecked: 0 } }
+              );
+            } catch (error) {
+              console.error(
+                `Error processing post ID ${report.postId}:`,
+                error
+              );
+            }
+          })
+        );
+      } else {
+        console.log("No posts with 10 or more unchecked reports found.");
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error in checkReportPost function:", error);
     }
-    console.log("đã kiểm tra");
+    console.log("Report check job completed.");
   });
 };
 
